@@ -1,0 +1,10 @@
+left cable
+brown cn7.20 GND 6
+red   cn7.16 3.3 7
+orange cn7.21 reset 9
+
+right cable
+brown cn5.16 cs 10
+red cn5.26 MOSI 15-17?
+orange cn5.28 A0/RS 7
+yellow cn5.30 sck 18
