@@ -1,31 +1,38 @@
-#include "FreeRTOS.h"
-#include "heartbeat.h"
-#include "screen_updater.h"
-#include "task.h"
-#include "Clock.h"
-#include "Gpio.h"
-#include "ds3231m.h"
-#include "i2c_blocking.h"
-#include "pwm.h"
-#include "ublox7.h"
-#include "buttons.h"
+/**
+ * @file main.c
+ * @brief Contains main function
+ * @author mikl74@yahoo.com
+ */
+
+#include <st75256.h>
 #include "stm32f1xx.h"
+#include "DL/Clock.h"
+#include "DL/Gpio.h"
+#include "Bll/BLL.h"
+#include "Bll/Can_Id.h"
+#include "DL/Adc.h"
+#include "DL/Spi.h"
+#include "DL/buttons.h"
+
+static void Init(void)
+{
+  Clock_HSI_Init();
+  Gpio_Init();
+  Adc_Init();
+  Clock_Timebase_Init();
+  SPI_Init();
+  Buttons_Init();
+  st75256_init();
+  BLL_Init();
+
+}
 
 void main(void)
 {
-	Clock_HSE_Init();
-	Gpio_Init();
-	Init_PWM();
-	Set_PWM(1);
-	Ublox7_init();
-	Clock_Tim2_Init();
-	Buttons_init();
-	Create_Heartbeat_Task();
-    ScreenUpdate_Task_create();
-    Create_DS3231_Task();
- 	vTaskStartScheduler();
-	while(1)
+	Init();
+	while ( 1 )
 	{
-
+		MainLoop_Iteration();
 	}
 }
+
