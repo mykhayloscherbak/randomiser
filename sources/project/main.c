@@ -4,7 +4,7 @@
  * @author mikl74@yahoo.com
  */
 
-#include <st75256.h>
+#include "uc1701x.h"
 #include "stm32f1xx.h"
 #include "DL/Clock.h"
 #include "DL/Gpio.h"
@@ -22,7 +22,7 @@ static void Init(void)
   Clock_Timebase_Init();
   SPI_Init();
   Buttons_Init();
-  st75256_init();
+  uc1701x_init();
   BLL_Init();
 
 }
