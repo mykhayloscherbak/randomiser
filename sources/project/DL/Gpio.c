@@ -35,7 +35,7 @@ static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 		[GPIO_NSS] = {.Port = GPIOB,.Pin = 12,.Mode = GPIO_MODE_OUT,1}, //GPIO_NSS
 		[GPIO_BUTTON] = {.Port = GPIOB,.Pin = 1,.Mode = GPIO_MODE_IN,0},   //GPIO_BUTTON
 		[GPIO_RESET] = {.Port = GPIOB,.Pin = 0, .Mode = GPIO_MODE_OUT, 0}, //GPIO_RESET
-		[GPIO_D4] = {.Port  = GPIOB, .Pin = 0, .Mode = GPIO_MODE_OUT, 1},
+		[GPIO_BEEPER] = {.Port = GPIOB, .Pin = 11, .Mode = GPIO_MODE_OUT,0},
 		[GPIO_DC]    = {.Port = GPIOB,.Pin = 14,  .Mode = GPIO_MODE_OUT, 0}  //GPIO_DC
 };
 

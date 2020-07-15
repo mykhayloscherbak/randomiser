@@ -83,5 +83,6 @@ uint8_t uc1701x_get_font_width(const FONT_INFO * const Font);
 
 void uc1701x_setMirror(const UC1701X_MIRROR_t mirror);
 void uc1701x_cls(void);
+uint8_t uc1701x_get_symbol_width(const FONT_INFO * const FONT, const wchar_t c);
 
 #endif /* SOURCE_DL_UC1701X_H_ */

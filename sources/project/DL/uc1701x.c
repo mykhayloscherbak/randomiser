@@ -175,6 +175,11 @@ uint8_t uc1701x_get_font_height(const FONT_INFO * const Font)
 	return Font->height;
 }
 
+uint8_t uc1701x_get_symbol_width(const FONT_INFO * const FONT, const wchar_t c)
+{
+	return FONT->Info[c - FONT->StartChar].width;
+}
+
 uint8_t uc1701x_get_font_width(const FONT_INFO * const Font)
 {
 	uint8_t Width = 0;

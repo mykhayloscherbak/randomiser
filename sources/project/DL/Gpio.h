@@ -20,7 +20,7 @@ typedef enum
 	GPIO_BUTTON,       /**< Button in */
 	GPIO_RESET,		   /**< Reset for LCD */
 	GPIO_DC,		   /**< D/Command */
-	GPIO_D4,           /**< Temporary pull - up for d4-d7 pins */
+	GPIO_BEEPER,       /**< Shit beeper */
 	GPIO_TOTAL         /**< Total number of GPIOs */
 }Gpio_Desc_t;
 

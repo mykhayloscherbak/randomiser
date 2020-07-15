@@ -22,6 +22,7 @@
 #include "../DL/Clock.h"
 #include "../DL/buttons.h"
 #include "../DL/Spi.h"
+#include "../DL/random.h"
 #include "../DL/uc1701x.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
@@ -35,6 +36,15 @@ typedef struct
 	void (*Task)(void); //!< Task function
 } Task_table_t;
 
+static inline void beeperOn(void)
+{
+	Gpio_Set_Bit(GPIO_BEEPER);
+}
+
+static inline void beeperOff(void)
+{
+	Gpio_Clear_Bit(GPIO_BEEPER);
+}
 
 static void Toggle_Heartbeat (void)
 {
@@ -71,55 +81,55 @@ static void wakeUp(void)
 }
 static void Bl_process(void)
 {
-	static uint8_t Width = 0;
-	static uint8_t Height = 0;
 
 	static BL_State_t state = ST_First_time;
 	const wchar_t Line1[]=L"Натисніть";
 	const wchar_t Line2[] = L"кнопку";
-	const uint8_t x = 10;
 	const uint8_t y = 30;
 	static uint32_t Timer = 0;
+	static uint8_t beepCounter;
+	static uint32_t beepTimer;
 
 	switch (state)
 	{
 	case ST_First_time:
-		Width = uc1701x_get_font_width(&arial_72ptFontInfo);
-		Height = uc1701x_get_font_height(&arial_72ptFontInfo);
 		uc1701x_setMirror(UC1701X_MIRROR_none);
 		state = ST_Wait_Button_rel;
 		break;
 	case ST_Wait_Button_rel:
 		if (IsSteadyReleased(B_GEN) != 0)
 		{
+			beeperOn();
+			SetTimer(&Timer,50);
 			state = ST_Greeting;
 		}
 		break;
 	case ST_Greeting:
-		uc1701x_cls();
-		uc1701x_puts(10,48,&arial_8ptFontInfo,Line1);
-		uc1701x_puts(15,60,&arial_8ptFontInfo,Line2);
-		SetTimer(&Timer,3000);
-		state = ST_Wait_Button_p;
+		if (IsTimerPassed(Timer) != 0)
+		{
+			beeperOff();
+			uc1701x_cls();
+			uc1701x_puts(10,48,&arial_8ptFontInfo,Line1);
+			uc1701x_puts(15,60,&arial_8ptFontInfo,Line2);
+			SetTimer(&Timer,3000);
+			state = ST_Wait_Button_p;
+		}
 		break;
 	case ST_Wait_Button_p:
 		if (IsSteadyPressed(B_GEN) != 0)
 		{
 			uc1701x_cls();
-			uint8_t random = GetTicksCounter() % 3 + 1;
+			uint8_t random = getRandom(3) + 1;
+			beepCounter = (random - 1) * 2;
 			wchar_t Buf[2];
 			Buf[0]= random + '0';
 			Buf[1]= 0;
-			const uint8_t x1 = uc1701x_puts(x,y,&arial_72ptFontInfo, Buf);
-
-			for (uint8_t xx = x1; xx < x + Width * 2; xx++ )
-			{
-				for (uint8_t yy = y; yy < y + Height; yy++ )
-				{
-					uc1701x_pixel(xx,yy,0);
-				}
-			}
+			uc1701x_cls();
+			const uint8_t x = (64 - uc1701x_get_symbol_width(&arial_72ptFontInfo,Buf[0])) / 2;
+			uc1701x_puts(x,y,&arial_72ptFontInfo, Buf);
 			SetTimer(&Timer,500);
+			SetTimer(&beepTimer,10);
+			beeperOn();
 			state = ST_Wait_Pause;
  		}
 		else
@@ -137,9 +147,31 @@ static void Bl_process(void)
 		}
 		break;
 	case ST_Wait_Pause:
-		if (IsTimerPassed(Timer) != 0)
+		if (beepCounter > 0)
 		{
-			state = ST_Wait_Button_rel;
+			if (IsTimerPassed(beepTimer) != 0)
+			{
+				if ((beepCounter & 1) == 0)
+				{
+					beeperOff();
+					SetTimer(&beepTimer,50);
+				}
+				else
+				{
+					beeperOn();
+					SetTimer(&beepTimer,10);
+				}
+				beepCounter--;
+			}
+		}
+		else
+		{
+			beeperOff();
+
+			if (IsTimerPassed(Timer) != 0)
+			{
+				state = ST_Wait_Button_rel;
+			}
 		}
 		break;
 	default:
