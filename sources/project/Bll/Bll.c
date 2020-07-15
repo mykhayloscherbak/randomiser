@@ -130,6 +130,7 @@ static void Bl_process(void)
 			if (randomInited == 0)
 			{
 				calcRandom(GetTicksCounter());
+				randomInited = 1;
 			}
 			uc1701x_cls();
 			uint8_t random = (calcRandom(0) >> 5) % 3 + 1;
