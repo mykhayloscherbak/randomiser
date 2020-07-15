@@ -22,7 +22,6 @@
 #include "../DL/Clock.h"
 #include "../DL/buttons.h"
 #include "../DL/Spi.h"
-#include "../DL/random.h"
 #include "../DL/uc1701x.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
@@ -79,6 +78,14 @@ static void wakeUp(void)
 {
 	uc1701x_init();
 }
+
+static uint32_t calcRandom(const uint32_t seed)
+{
+	static uint32_t result = 0;
+	result = (134775813 * ((seed == 0) ? result : seed) + 1);
+	return result;
+}
+
 static void Bl_process(void)
 {
 
@@ -89,11 +96,13 @@ static void Bl_process(void)
 	static uint32_t Timer = 0;
 	static uint8_t beepCounter;
 	static uint32_t beepTimer;
+	static uint8_t randomInited = 0;
 
 	switch (state)
 	{
 	case ST_First_time:
 		uc1701x_setMirror(UC1701X_MIRROR_none);
+		uc1701x_set_contrast(42);
 		state = ST_Wait_Button_rel;
 		break;
 	case ST_Wait_Button_rel:
@@ -118,8 +127,12 @@ static void Bl_process(void)
 	case ST_Wait_Button_p:
 		if (IsSteadyPressed(B_GEN) != 0)
 		{
+			if (randomInited == 0)
+			{
+				calcRandom(GetTicksCounter());
+			}
 			uc1701x_cls();
-			uint8_t random = getRandom(3) + 1;
+			uint8_t random = (calcRandom(0) >> 5) % 3 + 1;
 			beepCounter = (random - 1) * 2;
 			wchar_t Buf[2];
 			Buf[0]= random + '0';
@@ -195,7 +208,6 @@ static void BLL_Test_LCD(void)
 {
 
 	uc1701x_set_coordinates(0,0);
-	uc1701x_set_contrast(42);
 	Bl_process();
 	SPI_Transfer(1);
 }

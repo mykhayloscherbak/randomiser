@@ -12,7 +12,7 @@
 #include "DL/Adc.h"
 #include "DL/Spi.h"
 #include "DL/buttons.h"
-#include "DL/random.h"
+
 
 static void Init(void)
 {
@@ -23,7 +23,6 @@ static void Init(void)
   SPI_Init();
   Buttons_Init();
   uc1701x_init();
-  initRandom();
   BLL_Init();
 
 }
