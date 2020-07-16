@@ -9,7 +9,6 @@
 #include "DL/Clock.h"
 #include "DL/Gpio.h"
 #include "Bll/BLL.h"
-#include "DL/Adc.h"
 #include "DL/Spi.h"
 #include "DL/buttons.h"
 
@@ -18,7 +17,6 @@ static void Init(void)
 {
   Clock_HSI_Init();
   Gpio_Init();
-  Adc_Init();
   Clock_Timebase_Init();
   SPI_Init();
   Buttons_Init();

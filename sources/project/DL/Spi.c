@@ -15,6 +15,7 @@ static volatile uint8_t TransferComplete = 0xff;
 
 static void DMA_Spi_Init(void)
 {
+	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 	DMA1_Channel5->CCR = DMA_CCR_MINC |   /* Memory increment */
 						 DMA_CCR_TCIE| /* Transfer complete interrupt enable */
 						 DMA_CCR_DIR;  /* Direction from memory to peripheral */
@@ -25,8 +26,8 @@ void SPI_Init(void)
 	RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
 	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN | RCC_APB2ENR_AFIOEN;
 	/* PB13(CLK) and PB15 (MOSI) are af PP */
-	GPIOB->CRH |=  /* GPIO_CRH_CNF12_1| */ GPIO_CRH_CNF13_1 | GPIO_CRH_CNF15_1 | /* GPIO_CRH_MODE12 |*/ GPIO_CRH_MODE13 | GPIO_CRH_MODE15;
-	GPIOB->CRH &= ~(/* GPIO_CRH_CNF12_0 | */ GPIO_CRH_CNF13_0 | GPIO_CRH_CNF15_0);
+	GPIOB->CRH |=  GPIO_CRH_CNF13_1 | GPIO_CRH_CNF15_1 | GPIO_CRH_MODE13 | GPIO_CRH_MODE15;
+	GPIOB->CRH &= ~(GPIO_CRH_CNF13_0 | GPIO_CRH_CNF15_0);
 	/* Prescaler = 8, Bidi out, 8bit, SW nss control, idle low, 1 edge, master */
 	SPI2->CR1 = SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE | /* SPI_CR1_DFF | */ SPI_CR1_BR_1 | /* SPI_CR1_BR_0 | */ SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI;
 	SPI2->CR2 = 0; // SPI_CR2_SSOE;
@@ -34,6 +35,16 @@ void SPI_Init(void)
 	DMA_Spi_Init();
 	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 	NVIC_EnableIRQ(SPI2_IRQn);
+}
+
+void SPI_Deinit(void)
+{ //TODO: Change this to GPIO_Desc_t
+	GPIOB->CRH |=  GPIO_CRH_CNF13_1 | GPIO_CRH_CNF15_1;
+    GPIOB->CRH &= ~(GPIO_CRH_CNF13_0 | GPIO_CRH_CNF15_0 | GPIO_CRH_MODE13 | GPIO_CRH_MODE15);
+    GPIOB->ODR |= (1<<13) | (1<<15);
+    RCC->APB1ENR &= ~(RCC_APB1ENR_SPI2EN);
+    NVIC_DisableIRQ(DMA1_Channel5_IRQn);
+    NVIC_DisableIRQ(SPI2_IRQn);
 }
 
 void DMA1_Channel5_IRQHandler(void);

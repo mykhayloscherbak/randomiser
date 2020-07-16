@@ -21,10 +21,13 @@ typedef enum
 	GPIO_RESET,		   /**< Reset for LCD */
 	GPIO_DC,		   /**< D/Command */
 	GPIO_BEEPER,       /**< Shit beeper */
+	GPIO_SCK,          /**< LCD SCK */
+	GPIO_MOSI,         /**< LCD Mosi */
 	GPIO_TOTAL         /**< Total number of GPIOs */
 }Gpio_Desc_t;
 
 void Gpio_Init(void);
+void Gpio_DeInit(void);
 
 /**
  * @brief Sets the corresponding GPIO pin

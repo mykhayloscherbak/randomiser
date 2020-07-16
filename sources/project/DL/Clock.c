@@ -55,6 +55,11 @@ void Clock_Timebase_Init ( void )
 	NVIC_EnableIRQ( TIM2_IRQn );
 }
 
+void Clock_Timebase_deinit(void)
+{
+	RCC->APB1ENR &= ~(RCC_APB1ENR_TIM2EN);
+	NVIC_DisableIRQ( TIM2_IRQn );
+}
 void TIM2_IRQHandler(void)
 {
 	if ((TIM2->SR & TIM_SR_UIF) !=0)

@@ -15,7 +15,7 @@
  * @brief Inits SPI2 bus
  */
 void SPI_Init(void);
-
+void SPI_Deinit(void);
 /**
  * @brief Sends 16bit value to bus
  * @param Data Value

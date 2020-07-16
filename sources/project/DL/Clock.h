@@ -10,16 +10,22 @@
 #ifndef SOURCE_DL_CLOCK_H_
 #define SOURCE_DL_CLOCK_H_
 
-#define CPU_FREQ 72000000ul
+#define CPU_FREQ 8000000ul
 
 /**
  * @brief Inits HSE as a main clock. PLL is setup to *9
  */
 void Clock_HSI_Init(void);
 /**
- * @brief Initialises TIM2 as a timebase for 10kHz PWM
+ * @brief Initialises TIM2 as a timebase
  */
 void Clock_Timebase_Init ( void );
+
+/**
+ * @brief De-initialises TIM2 before going to sleep mode
+ */
+void Clock_Timebase_deinit(void);
+
 
 /**
  * @brief Returns number of milliseconds from timebase start

@@ -18,11 +18,11 @@
 #include <wchar.h>
 #include "BLL.h"
 #include "../DL/Gpio.h"
-#include "../DL/Adc.h"
 #include "../DL/Clock.h"
 #include "../DL/buttons.h"
 #include "../DL/Spi.h"
 #include "../DL/uc1701x.h"
+#include "../DL/power.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
 /**
@@ -71,11 +71,12 @@ typedef enum
 static void goToSleep(void)
 {
 	Gpio_Clear_Bit(GPIO_RESET);
-
+	sleep();
 }
 
-static void wakeUp(void)
+static void wakeUpBL(void)
 {
+	wakeup();
 	uc1701x_init();
 }
 
@@ -97,12 +98,14 @@ static void Bl_process(void)
 	static uint8_t beepCounter;
 	static uint32_t beepTimer;
 	static uint8_t randomInited = 0;
+	uint8_t random;
 
 	switch (state)
 	{
 	case ST_First_time:
 		uc1701x_setMirror(UC1701X_MIRROR_none);
 		uc1701x_set_contrast(42);
+		uc1701x_cls();
 		state = ST_Wait_Button_rel;
 		break;
 	case ST_Wait_Button_rel:
@@ -125,6 +128,7 @@ static void Bl_process(void)
 		}
 		break;
 	case ST_Wait_Button_p:
+		random = (calcRandom(0) >> 5) % 3 + 1;
 		if (IsSteadyPressed(B_GEN) != 0)
 		{
 			if (randomInited == 0)
@@ -133,7 +137,6 @@ static void Bl_process(void)
 				randomInited = 1;
 			}
 			uc1701x_cls();
-			uint8_t random = (calcRandom(0) >> 5) % 3 + 1;
 			beepCounter = (random - 1) * 2;
 			wchar_t Buf[2];
 			Buf[0]= random + '0';
@@ -151,12 +154,10 @@ static void Bl_process(void)
 			if (IsTimerPassed(Timer) != 0)
 			{
 				goToSleep();
-//				__WFE();
-				if (IsPressed(B_GEN) != 0)
-				{
-					wakeUp();
-					state = ST_First_time;
-				}
+				__DSB();
+				__WFE();
+				wakeUpBL();
+				state = ST_First_time;
 			}
 		}
 		break;
