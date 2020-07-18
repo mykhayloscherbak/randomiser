@@ -21,7 +21,7 @@
 /**
  * \brief Number of tics to assume the button state is stable.
  */
-#define BUTTONWAIT (CALLS_PER_SECOND / 20)
+#define BUTTONWAIT (CALLS_PER_SECOND / 30)
 /**
  * \brief Number of tics to assume the button is long pressed.
  */

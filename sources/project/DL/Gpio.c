@@ -118,28 +118,34 @@ static void setPortPD(GPIO_TypeDef * const GPIO)
 {
 	for (uint8_t pin = 0; pin < 16; pin++)
 	{
-		for (Gpio_Desc_t Pin = 0; Pin < GPIO_TOTAL; Pin++)
+		Gpio_Desc_t Pin = 0;
+		for (Pin = 0; Pin < GPIO_TOTAL; Pin++)
 		{
-			if ((Gpio_Config[Pin].Pin != Pin) && (Gpio_Config[Pin].Port != GPIO))
+			if ((Gpio_Config[Pin].Pin == Pin) && (Gpio_Config[Pin].Port == GPIO))
 			{
-				if ( Gpio_Config[pin].Pin < 8 )
-				{
-					(Gpio_Config[pin].Port)->CRL &= ~( 0b11<< ( Gpio_Config[pin].Pin * 4));
-					(Gpio_Config[pin].Port)->CRL &= ~( 0b01<< ( Gpio_Config[pin].Pin * 4 + 2));
-					(Gpio_Config[pin].Port)->CRL |=  ( 0b10<< ( Gpio_Config[pin].Pin * 4 + 2));
-					(Gpio_Config[pin].Port)->ODR |=  ( 1<< Gpio_Config[pin].Pin ); /* Pull-Up */
-				}
-				else
-				{
-					(Gpio_Config[pin].Port)->CRH &= ~( 0b11<< ( (Gpio_Config[pin].Pin - 8) * 4));
-					(Gpio_Config[pin].Port)->CRH &= ~( 0b01<< ( (Gpio_Config[pin].Pin - 8) * 4 + 2));
-					(Gpio_Config[pin].Port)->CRH |=  ( 0b10<< ( (Gpio_Config[pin].Pin - 8) * 4 + 2));
-					(Gpio_Config[pin].Port)->ODR |=  ( 1<< Gpio_Config[pin].Pin ); /* Pull-Up */
-				}
+				break;
+			}
+		}
+		if (GPIO_TOTAL == Pin)
+		{
+			if ( Gpio_Config[pin].Pin < 8 )
+			{
+				GPIO->CRL &= ~( 0b11<< ( Gpio_Config[pin].Pin * 4));
+				GPIO->CRL &= ~( 0b01<< ( Gpio_Config[pin].Pin * 4 + 2));
+				GPIO->CRL |=  ( 0b10<< ( Gpio_Config[pin].Pin * 4 + 2));
+				GPIO->ODR |=  ( 1<< Gpio_Config[pin].Pin ); /* Pull-Up */
+			}
+			else
+			{
+				GPIO->CRH &= ~( 0b11<< ( (Gpio_Config[pin].Pin - 8) * 4));
+				GPIO->CRH &= ~( 0b01<< ( (Gpio_Config[pin].Pin - 8) * 4 + 2));
+				GPIO->CRH |=  ( 0b10<< ( (Gpio_Config[pin].Pin - 8) * 4 + 2));
+				GPIO->ODR |=  ( 1<< Gpio_Config[pin].Pin ); /* Pull-Up */
 			}
 		}
 	}
 }
+
 
 
 void Gpio_DeInit(void)

@@ -1,15 +1,10 @@
 /**
  * @file Bll.c
- * @brief Contains board ID reading and heartbeat functions
- * @author Mikl Scherbak
+ * @brief contains all business logic
+ * @author Mykhaylo Shcherbak
  * @em mikl74@yahoo.com
- * @date 16-04-2016
+ * @date 18-07-2020
  */
-#define ID_NO_ID	0x7 /**< No ID switch installed, all pins are pulled-up */
-#define POS_BRIGHTNESS 10 /**< Wiper must be in this pos and button must be pressed to switch to brightness mode */
-#define POS_NO_POS 99 /**< Illegal position */
-#define BAR_NO_BAR 9  /**< Illegal bar */
-#define BRIGHTNESS_NO_BRIGHTNESS 15 /**< Illegal brightness */
 
 #include <stm32f1xx.h>
 #include <stddef.h>
@@ -25,6 +20,17 @@
 #include "../DL/power.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
+
+#define VERSION L"V1.01"
+#define WIDE2(x) L##x
+#define WIDE(x) WIDE2(x)
+
+typedef enum
+{
+	contrast = 42,
+	freezeTimeout = 5,
+	sleepTimeout = 10 * 60
+} Constants;
 /**
  * @brief Task table element
  */
@@ -45,11 +51,11 @@ static inline void beeperOff(void)
 	Gpio_Clear_Bit(GPIO_BEEPER);
 }
 
-static void Toggle_Heartbeat (void)
+static void Heartbeat (void)
 {
 	static uint8_t flag = 0;
-
-	if (flag)
+	static uint32_t Timer = 0;
+	if (!flag)
 	{
 		Gpio_Set_Bit(GPIO_HEARTBEAT);
 	}
@@ -57,27 +63,55 @@ static void Toggle_Heartbeat (void)
 	{
 		Gpio_Clear_Bit(GPIO_HEARTBEAT);
 	}
-	flag = !flag;
+
+	if (Timer == 0)
+	{
+		SetTimer(&Timer,1);
+	}
+	if (IsTimerPassed(Timer ) != 0)
+	{
+		if (flag)
+		{
+			SetTimer(&Timer,500);
+		}
+		else
+		{
+			SetTimer(&Timer,20);
+		}
+		flag = !flag;
+	}
 }
+
 typedef enum
 {
 	ST_First_time = 0,
+	ST_Version,
 	ST_Greeting,
 	ST_Wait_Button_p,
 	ST_Wait_Button_rel,
 	ST_Wait_Pause
 } BL_State_t;
 
-static void goToSleep(void)
+static void Sleep(void)
 {
 	Gpio_Clear_Bit(GPIO_RESET);
-	sleep();
+	powerSave();
+	uc1701x_init();
+	uc1701x_setMirror(UC1701X_MIRROR_none);
+	uc1701x_set_contrast(contrast);
 }
 
-static void wakeUpBL(void)
+static void versionDisplay(void)
 {
-	wakeup();
-	uc1701x_init();
+	uc1701x_cls();
+	const wchar_t Line1[] = VERSION;
+	const wchar_t Line2[] = WIDE(__DATE__);
+	const wchar_t Line3[] = WIDE(__TIME__);
+	const FONT_INFO * const pFont = &arial_8ptFontInfo;
+	const uint8_t height = uc1701x_get_font_height(pFont);
+	uc1701x_puts(0,0,pFont,Line1);
+	uc1701x_puts(0,height,pFont,Line2);
+	uc1701x_puts(0,height * 2,pFont,Line3);
 }
 
 static uint32_t calcRandom(const uint32_t seed)
@@ -104,9 +138,16 @@ static void Bl_process(void)
 	{
 	case ST_First_time:
 		uc1701x_setMirror(UC1701X_MIRROR_none);
-		uc1701x_set_contrast(42);
-		uc1701x_cls();
-		state = ST_Wait_Button_rel;
+		uc1701x_set_contrast(contrast);
+		versionDisplay();
+		SetTimer(&Timer,100);
+		state = ST_Version;
+		break;
+	case ST_Version:
+		if (IsTimerPassed(Timer) != 0)
+		{
+			state = ST_Wait_Button_rel;
+		}
 		break;
 	case ST_Wait_Button_rel:
 		if (IsSteadyReleased(B_GEN) != 0)
@@ -123,7 +164,7 @@ static void Bl_process(void)
 			uc1701x_cls();
 			uc1701x_puts(10,48,&arial_8ptFontInfo,Line1);
 			uc1701x_puts(15,60,&arial_8ptFontInfo,Line2);
-			SetTimer(&Timer,3000);
+			SetTimer(&Timer,sleepTimeout * 100);
 			state = ST_Wait_Button_p;
 		}
 		break;
@@ -144,7 +185,7 @@ static void Bl_process(void)
 			uc1701x_cls();
 			const uint8_t x = (64 - uc1701x_get_symbol_width(&arial_72ptFontInfo,Buf[0])) / 2;
 			uc1701x_puts(x,y,&arial_72ptFontInfo, Buf);
-			SetTimer(&Timer,500);
+			SetTimer(&Timer,freezeTimeout * 100);
 			SetTimer(&beepTimer,10);
 			beeperOn();
 			state = ST_Wait_Pause;
@@ -153,14 +194,11 @@ static void Bl_process(void)
 		{
 			if (IsTimerPassed(Timer) != 0)
 			{
-				goToSleep();
-				__DSB();
-				__WFE();
-				wakeUpBL();
-				state = ST_First_time;
+				Sleep();
+				state = ST_Wait_Button_rel;
 			}
 		}
-		break;
+		break; /* Regulator off */
 	case ST_Wait_Pause:
 		if (beepCounter > 0)
 		{
@@ -206,7 +244,7 @@ void BLL_Init(void)
 }
 
 
-static void BLL_Test_LCD(void)
+static void BLL_iteration_and_display(void)
 {
 
 	uc1701x_set_coordinates(0,0);
@@ -218,8 +256,8 @@ uint8_t MainLoop_Iteration(void)
 {
 	static const Task_table_t TaskTable[]={
 			{1,0, BLL_Process_Buttons},
-			{50,1,Toggle_Heartbeat},
-			{10,2,BLL_Test_LCD},
+			{10,1,Heartbeat},
+			{10,2,BLL_iteration_and_display},
 			{0,0,NULL}
 	};
 	static uint32_t OldTicksCounter = 0;

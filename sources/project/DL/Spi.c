@@ -43,6 +43,7 @@ void SPI_Deinit(void)
     GPIOB->CRH &= ~(GPIO_CRH_CNF13_0 | GPIO_CRH_CNF15_0 | GPIO_CRH_MODE13 | GPIO_CRH_MODE15);
     GPIOB->ODR |= (1<<13) | (1<<15);
     RCC->APB1ENR &= ~(RCC_APB1ENR_SPI2EN);
+    RCC->AHBENR &= ~(RCC_AHBENR_DMA1EN);
     NVIC_DisableIRQ(DMA1_Channel5_IRQn);
     NVIC_DisableIRQ(SPI2_IRQn);
 }
