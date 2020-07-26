@@ -21,7 +21,7 @@ typedef enum
 
 typedef void (*powerDown_t) (void);
 
-#pragma pack(1)
+#pragma pack(push,1)
 /**
  * @brief Gpio pin configuration
  */
@@ -33,25 +33,28 @@ typedef struct
 	uint8_t InitialValue; /**< Initial value of OUT pin */
 	powerDown_t powerDown; /**< Function that is called to set pin to power down state */
 }Gpio_Config_t;
+#pragma pack(pop)
 
 static void heartBeatPD(void);
-static void nssPD(void);
 static void lcdResetPD(void);
-static void beeperPD(void);
-static void dcPD(void);
 
 static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 {
-		[GPIO_HEARTBEAT] = {.Port = GPIOC,.Pin = 13 ,.Mode = GPIO_MODE_OUT,0,heartBeatPD}, //GPIO_HEARTBEAT
-		[GPIO_NSS] = {.Port = GPIOB,.Pin = 12,.Mode = GPIO_MODE_OUT,1,nssPD}, //GPIO_NSS
-		[GPIO_BUTTON] = {.Port = GPIOB,.Pin = 1,.Mode = GPIO_MODE_IN,0,NULL},   //GPIO_BUTTON
-		[GPIO_RESET] = {.Port = GPIOB,.Pin = 0, .Mode = GPIO_MODE_OUT, 0,lcdResetPD}, //GPIO_RESET
-		[GPIO_BEEPER] = {.Port = GPIOB, .Pin = 11, .Mode = GPIO_MODE_OUT,0,beeperPD}, //GPIO_BEEPER
-		[GPIO_SCK] = {.Port = GPIOB, .Pin = 13, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0,  NULL},
-		[GPIO_MOSI] = {.Port = GPIOB, .Pin = 15, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, NULL},
-		[GPIO_DC]    = {.Port = GPIOB,.Pin = 14,  .Mode = GPIO_MODE_OUT, 0,dcPD}  //GPIO_DC
+		[GPIO_HEARTBEAT] = {.Port = GPIOC,.Pin = 0 ,.Mode = GPIO_MODE_OUT,0,heartBeatPD}, //GPIO_HEARTBEAT
+		[GPIO_RESET] = {.Port = GPIOB,.Pin = 7, .Mode = GPIO_MODE_OUT, 0,lcdResetPD}, //GPIO_RESET
+		[GPIO_SCL] = {.Port = GPIOB, .Pin = 8, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0,  NULL},
+		[GPIO_SDA] = {.Port = GPIOB, .Pin = 9, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, NULL},
 };
 
+uint8_t Gpio_Get_Pin(const Gpio_Desc_t gpio)
+{
+	return Gpio_Config[gpio].Pin;
+}
+
+GPIO_TypeDef * Gpio_Get_Port(const Gpio_Desc_t gpio)
+{
+	return Gpio_Config[gpio].Port;
+}
 
 void Gpio_Init(void)
 {
@@ -237,22 +240,8 @@ static void heartBeatPD(void)
 	configPinIn(GPIO_HEARTBEAT,1);
 }
 
-static void nssPD(void)
-{
-	configPinIn(GPIO_NSS,1);
-}
 
 static void lcdResetPD(void)
 {
 	configPinIn(GPIO_RESET,0);
-}
-
-static void beeperPD(void)
-{
-	configPinIn(GPIO_BEEPER,0);
-}
-
-static void dcPD(void)
-{
-	configPinIn(GPIO_DC,1);
 }

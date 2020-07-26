@@ -11,6 +11,8 @@
 #include "Bll/BLL.h"
 #include "DL/Spi.h"
 #include "DL/buttons.h"
+#include "DL/i2c.h"
+#include "DL/st75256.h"
 
 
 static void Init(void)
@@ -18,10 +20,12 @@ static void Init(void)
   Clock_HSI_Init();
   Gpio_Init();
   Clock_Timebase_Init();
-  SPI_Init();
-  Buttons_Init();
-  uc1701x_init();
-  BLL_Init();
+  i2cInit();
+  st75256_init();
+//  SPI_Init();
+//  Buttons_Init();
+//  uc1701x_init();
+//  BLL_Init();
 
 }
 
@@ -30,7 +34,8 @@ void main(void)
 	Init();
 	while ( 1 )
 	{
-		MainLoop_Iteration();
+//		MainLoop_Iteration();
+		__asm volatile ("nop");
 	}
 }
 

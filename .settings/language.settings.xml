@@ -202,6 +202,24 @@
 						</entry>
 						<entry kind="macro" name="STM32F103xB" value="1"/>
 					</resource>
+					<resource project-relative-path="sources/project/DL/i2c.c">
+						<entry kind="includePath" name="/${ProjName}/sources/project/fonts">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="includePath" name="/${ProjName}/sources/project/Bll">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="includePath" name="/${ProjName}/sources/project/DL">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="includePath" name="/${ProjName}/sources/CMSIS/Device/ST/STM32F1xx/Include">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="includePath" name="/${ProjName}/sources/CMSIS/Include">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="macro" name="STM32F103xB" value="1"/>
+					</resource>
 					<resource project-relative-path="sources/project/DL/buttons.c">
 						<entry kind="includePath" name="/${ProjName}/sources/project/fonts">
 							<flag value="VALUE_WORKSPACE_PATH"/>

@@ -25,7 +25,7 @@ void Clock_HSI_Init(void)
 	{
 	}
 	RCC->CFGR &= ~RCC_CFGR_SW; /* USE HSI during setup */
-	RCC->CFGR |= /* for HSE: RCC_CFGR_PLLSRC | */ RCC_CFGR_ADCPRE_DIV8 | RCC_CFGR_PPRE1_2 | RCC_CFGR_PLLMULL9;
+	RCC->CFGR |= /* for HSE: RCC_CFGR_PLLSRC | */ RCC_CFGR_ADCPRE_DIV8 | RCC_CFGR_PPRE1_2 | RCC_CFGR_PLLMULL8; /* Core freq is 32mhz */
 //	RCC->CR |= RCC_CR_HSEON;
 //	while ( ! (RCC->CR & RCC_CR_HSERDY) )
 //	{
@@ -39,13 +39,13 @@ void Clock_HSI_Init(void)
 //	RCC->CR &= ~RCC_CR_HSION;
 }
 
-/* Tim2 interrupts must be at 10Khz */
+/* Tim2 interrupts must be at 1Khz */
 void Clock_Timebase_Init ( void )
 {
 	DBGMCU->CR|=DBGMCU_CR_DBG_TIM2_STOP;
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-	TIM2->PSC = 39; /*/80 div and counter will count to 99 */
-	TIM2->ARR = 9999; /*/100 div */
+	TIM2->PSC = 31; /*/16 div and counter will count to 99 */
+	TIM2->ARR = 999; /*/1000 div */
 	TIM2->CR1 = TIM_CR1_URS;
 	TIM2->CR2 = 0;
 	TIM2->SMCR = 0;

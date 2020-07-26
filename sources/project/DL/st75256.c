@@ -5,65 +5,67 @@
  * @e mikl74@yahoo.com
  * @date 11-07-2020
  */
-#if 0 //Project switched back to uc1701 (JLX12864G)
+#if 1 //Project switched back to uc1701 (JLX12864G)
 #include "st75256.h"
 
 #include <string.h>
 #include "Spi.h"
 #include "Gpio.h"
 #include "Clock.h"
-#include "../fonts/arial36.h"
-#include "../fonts/arial8.h"
-#include "../fonts/fonts.h"
+#include "i2c.h"
 
-#define ZERO_OFFSET 4
 #define XSIZE 256
 #define YSIZE 160
 
 /* Vop = 16V */
 /* Bias = 1/14 */
 
-uint8_t FrameBuf[FRAME_BUF_SIZE];
-typedef struct
-{
-	uint8_t cmd;
-	uint8_t a0;
-} Lcd_init_t;
+//uint8_t FrameBuf[FRAME_BUF_SIZE];
 
-static const Lcd_init_t Init_Array[]=
+enum
 {
-		{.cmd = 0x30, .a0 = 0},    /* select 00 commands */
-		{.cmd = 0x94, .a0 = 0},    /* sleep out */
-		{.cmd = 0xae, .a0 = 0},    /* display off */
-		{.cmd = 0x23, .a0 = 0},
-		{.cmd = 0x31, .a0 = 0},    /* select 01 commands */
-		{.cmd = 0xd7, .a0 = 0},  /* disable auto read, 2 byte command */
-		{.cmd = 0x9f, .a0 = 1},
-		{.cmd = 0x32, .a0 = 0}, /* analog circuit set, 4 bytes */
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 0x01, .a0 = 1}, /* Frequency on booster capacitors 1 = 6KHz? */
-		{.cmd = 0x00, .a0 = 1}, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
-		{.cmd = 0x30, .a0 = 0},
-		{.cmd = 0x75, .a0 = 0},
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 0x4f, .a0 = 1},
-		{.cmd = 0x15, .a0 = 0},
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 0xff, .a0 = 1},
-		{.cmd = 0xbc, .a0 = 0}, /* scan direction */
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 0x0c, .a0 = 0},
-		{.cmd = 0xca, .a0 = 0}, /* Display control */
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 159, .a0 = 1},
-		{.cmd = 0x20, .a0 = 1},
-		{.cmd = 0xf0, .a0 = 0}, /* no GS */
-		{.cmd = 0x10, .a0 = 1},
-		{.cmd = 0x81, .a0 = 0}, /* Vop = 16V */
-		{.cmd = 0x36, .a0 = 1},
-		{.cmd = 0x00, .a0 = 1},
-		{.cmd = 0x20, .a0 = 0},
-		{.cmd = 0x0b, .a0 = 1}
+	C = 0x80,
+	D = 0xC0,
+	LC = 0x00,
+	LD = 0x40
+};
+
+static const uint8_t Init_Array[]=
+{
+		 C, 0x30,// 0,    /* select 00 commands */
+		 C, 0x94,// 0,    /* sleep out */
+		 C, 0xae,// 0,    /* display off */
+		 C, 0x23,// 0,
+		 C, 0x31,// 0,    /* select 01 commands */
+		 C, 0xd7,// 0,  /* disable auto read, 2 byte command */
+		 D, 0x9f,// 1,
+		 C, 0x32,// 0, /* analog circuit set, 4 bytes */
+		 D, 0x00,// 1,
+		 D, 0x01,// 1, /* Frequency on booster capacitors 1 = 6KHz? */
+		 D, 0x00,// 1, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
+		 C, 0x30,// 0,
+		 C, 0x75,// 0,
+		 D, 0x00,// 1,
+		 D, 0x4f,// 1,
+		 C, 0x15,// 0,
+		 D, 0x00,// 1,
+		 D, 0xff,// 1,
+		 C, 0xbc,// 0, /* scan direction */
+		 D, 0x00,// 1,
+		 C, 0x0c,// 0,
+		 C, 0xca,// 0, /* Display control */
+		 D, 0x00,// 1,
+		 D,  159,// 1,
+		 D, 0x20,// 1,
+		 C, 0xf0,// 0, /* no GS */
+		 D, 0x10,// 1,
+		 C, 0x81,// 0, /* Vop = 16V */
+		 D, 0x36,// 1,
+		 D, 0x00,// 1,
+		 C, 0x20,// 0,
+		 D, 0x0b, // 1
+		 C, 0xaf, // 0
+		 LC, 0x43 // 0
 //
 //		{.cmd = 0xaf, .a0 = 0},
 //		{.cmd = 0x43, .a0 = 0}
@@ -71,47 +73,18 @@ static const Lcd_init_t Init_Array[]=
 
 void st75256_init(void)
 {
-	Gpio_Set_Bit(GPIO_D4);
-	uint32_t Timer;
 	Gpio_Clear_Bit(GPIO_RESET);
-	SetTimer(&Timer,10);
-	while (IsTimerPassed(Timer))
-	{
-
-	}
+	DelayMsTimer(10);
 	Gpio_Set_Bit(GPIO_RESET);
-	SetTimer(&Timer,10);
-	while (IsTimerPassed(Timer))
-	{
+	DelayMsTimer(10);
+	i2cSend(0x78, (uint8_t *) Init_Array, sizeof(Init_Array));
 
-	}
-
-	Gpio_Clear_Bit(GPIO_NSS);
-	for (uint8_t i = 0; i < sizeof(Init_Array) / sizeof(Init_Array[0]); i++)
-	{
-		if (Init_Array[i].a0 == 0)
-		{
-			Gpio_Clear_Bit(GPIO_DC);
-		}
-		else
-		{
-			Gpio_Set_Bit(GPIO_DC);
-		}
-		SPI_Send_One(Init_Array[i].cmd);
-	}
-	Gpio_Set_Bit(GPIO_NSS);
-	DelayMsTimer(100);
-	Gpio_Clear_Bit(GPIO_NSS);
-	Gpio_Clear_Bit(GPIO_DC);
-	SPI_Send_One(0xaf);
-	SPI_Send_One(0x23);
-	SPI_Send_One(0x31);
-	SPI_Send_One(0x41);
-	Gpio_Set_Bit(GPIO_NSS);
 }
 #if 0
 void uc1701x_set_coordinates(const uint8_t Column,const uint8_t Page)
-{
+{	Gpio_Set_Bit(GPIO_D4);
+uint32_t Timer;
+
 	Gpio_Clear_Bit(GPIO_DC);
 	Gpio_Clear_Bit(GPIO_NSS);
 	SPI_Send_One(CMD_SetColumn_l | (Column & 0xF));
