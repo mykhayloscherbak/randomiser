@@ -22,6 +22,8 @@ static void Init(void)
   Clock_Timebase_Init();
   i2cInit();
   st75256_init();
+  DelayMsTimer(10);
+  st75256_test();
 //  SPI_Init();
 //  Buttons_Init();
 //  uc1701x_init();
@@ -34,7 +36,7 @@ void main(void)
 	Init();
 	while ( 1 )
 	{
-//		MainLoop_Iteration();
+	//	st75256_test();
 		__asm volatile ("nop");
 	}
 }

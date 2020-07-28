@@ -16,11 +16,14 @@
 
 #define XSIZE 256
 #define YSIZE 160
+#define FRAME_BUF_SIZE (XSIZE * YSIZE / 8)
 
 /* Vop = 16V */
 /* Bias = 1/14 */
+/* Duty = 1/160 */
 
-//uint8_t FrameBuf[FRAME_BUF_SIZE];
+static uint8_t FrameBufWithPrefix[FRAME_BUF_SIZE + 5];
+static uint8_t * const FrameBuf = FrameBufWithPrefix + 5;
 
 enum
 {
@@ -35,18 +38,21 @@ static const uint8_t Init_Array[]=
 		 C, 0x30,// 0,    /* select 00 commands */
 		 C, 0x94,// 0,    /* sleep out */
 		 C, 0xae,// 0,    /* display off */
-		 C, 0x23,// 0,
 		 C, 0x31,// 0,    /* select 01 commands */
+
 		 C, 0xd7,// 0,  /* disable auto read, 2 byte command */
 		 D, 0x9f,// 1,
+
 		 C, 0x32,// 0, /* analog circuit set, 4 bytes */
 		 D, 0x00,// 1,
 		 D, 0x01,// 1, /* Frequency on booster capacitors 1 = 6KHz? */
-		 D, 0x00,// 1, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
+		 D, 0x03,// 1, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
+
 		 C, 0x30,// 0,
+
 		 C, 0x75,// 0,
 		 D, 0x00,// 1,
-		 D, 0x4f,// 1,
+		 D, 0x28,// 1,
 		 C, 0x15,// 0,
 		 D, 0x00,// 1,
 		 D, 0xff,// 1,
@@ -55,17 +61,19 @@ static const uint8_t Init_Array[]=
 		 C, 0x0c,// 0,
 		 C, 0xca,// 0, /* Display control */
 		 D, 0x00,// 1,
-		 D,  159,// 1,
+		 D, 0x9F,// 1,
 		 D, 0x20,// 1,
 		 C, 0xf0,// 0, /* no GS */
 		 D, 0x10,// 1,
 		 C, 0x81,// 0, /* Vop = 16V */
 		 D, 0x36,// 1,
-		 D, 0x00,// 1,
+		 D, 0x04,// 1,
 		 C, 0x20,// 0,
 		 D, 0x0b, // 1
+		 C, 0x40, // 0
 		 C, 0xaf, // 0
-		 LC, 0x43 // 0
+		 LC, 0xa7
+
 //
 //		{.cmd = 0xaf, .a0 = 0},
 //		{.cmd = 0x43, .a0 = 0}
@@ -80,6 +88,18 @@ void st75256_init(void)
 	i2cSend(0x78, (uint8_t *) Init_Array, sizeof(Init_Array));
 
 }
+
+void st75256_test(void)	//		MainLoop_Iteration();
+{
+	memset(FrameBuf, 0xF0, FRAME_BUF_SIZE);
+	FrameBufWithPrefix[0] = C;
+	FrameBufWithPrefix[1] = 0x30;
+	FrameBufWithPrefix[2] = C;
+	FrameBufWithPrefix[3] = 0x5C;
+	FrameBufWithPrefix[4] = LD;
+	i2cSend(0x78, FrameBufWithPrefix, sizeof(FrameBufWithPrefix));
+}
+
 #if 0
 void uc1701x_set_coordinates(const uint8_t Column,const uint8_t Page)
 {	Gpio_Set_Bit(GPIO_D4);
