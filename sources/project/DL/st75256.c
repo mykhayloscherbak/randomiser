@@ -72,7 +72,7 @@ static const uint8_t Init_Array[]=
 		 D, 0x0b, // 1
 		 C, 0x40, // 0
 		 C, 0xaf, // 0
-		 LC, 0xa7
+		 LC, 0xa6
 
 //
 //		{.cmd = 0xaf, .a0 = 0},
@@ -86,12 +86,11 @@ void st75256_init(void)
 	Gpio_Set_Bit(GPIO_RESET);
 	DelayMsTimer(10);
 	i2cSend(0x78, (uint8_t *) Init_Array, sizeof(Init_Array));
-
 }
 
 void st75256_test(void)	//		MainLoop_Iteration();
 {
-	memset(FrameBuf, 0xF0, FRAME_BUF_SIZE);
+	memset(FrameBuf, 0x01, FRAME_BUF_SIZE /2 );
 	FrameBufWithPrefix[0] = C;
 	FrameBufWithPrefix[1] = 0x30;
 	FrameBufWithPrefix[2] = C;

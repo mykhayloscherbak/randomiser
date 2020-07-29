@@ -118,6 +118,7 @@ void DMA1_Channel6_IRQHandler(void)
 	I2C1->CR2 &= ~I2C_CR2_DMAEN;
 	NVIC_EnableIRQ(I2C1_EV_IRQn);
 	I2C1->CR2 |= I2C_CR2_ITEVTEN;
+	DMA1->IFCR = DMA_IFCR_CGIF6;
 	NVIC_DisableIRQ(DMA1_Channel6_IRQn);
 }
 
