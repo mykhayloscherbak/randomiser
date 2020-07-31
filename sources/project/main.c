@@ -17,14 +17,15 @@
 
 static void Init(void)
 {
+
   Clock_HSI_Init();
   Gpio_Init();
   Clock_Timebase_Init();
   i2cInit();
-  st75256_init();
+  LCD_Desc_t desc;
+  st75256_init(&desc);
   DelayMsTimer(10);
-  st75256_test();
-//  SPI_Init();
+  //  SPI_Init();
 //  Buttons_Init();
 //  uc1701x_init();
 //  BLL_Init();
@@ -34,6 +35,7 @@ static void Init(void)
 void main(void)
 {
 	Init();
+	st75256_test();
 	while ( 1 )
 	{
 	//	st75256_test();

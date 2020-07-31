@@ -5,7 +5,7 @@
  * @e mikl74@yahoo.com
  * @date 11-07-2020
  */
-#if 1 //Project switched back to uc1701 (JLX12864G)
+
 #include "st75256.h"
 
 #include <string.h>
@@ -13,10 +13,14 @@
 #include "Gpio.h"
 #include "Clock.h"
 #include "i2c.h"
+#include "../fonts/arial72.h"
+
 
 #define XSIZE 256
 #define YSIZE 160
 #define FRAME_BUF_SIZE (XSIZE * YSIZE / 8)
+#define DELIM_WIDTH 2
+#define LCD_ADDR 0x78
 
 /* Vop = 16V */
 /* Bias = 1/14 */
@@ -79,56 +83,71 @@ static const uint8_t Init_Array[]=
 //		{.cmd = 0x43, .a0 = 0}
 };
 
-void st75256_init(void)
+uint8_t st75256_init(LCD_Desc_t * const lcdDesc)
 {
 	Gpio_Clear_Bit(GPIO_RESET);
 	DelayMsTimer(10);
 	Gpio_Set_Bit(GPIO_RESET);
 	DelayMsTimer(10);
-	i2cSend(0x78, (uint8_t *) Init_Array, sizeof(Init_Array));
+	lcdDesc->xsize = XSIZE;
+	lcdDesc->ysize = YSIZE;
+	return i2cSend(LCD_ADDR, (uint8_t *) Init_Array, sizeof(Init_Array));
+
 }
+
+
 
 void st75256_test(void)	//		MainLoop_Iteration();
 {
-	memset(FrameBuf, 0x01, FRAME_BUF_SIZE /2 );
+	memset(FrameBuf, 0x00, FRAME_BUF_SIZE);
+	st75256_puts(60,40,&arial_72ptFontInfo,L"123");
+//	st75256_setCoordinates(0,0);
+	st75256_sendBuffer();
+}
+
+void st75256_sendBuffer(void)
+{
 	FrameBufWithPrefix[0] = C;
 	FrameBufWithPrefix[1] = 0x30;
 	FrameBufWithPrefix[2] = C;
 	FrameBufWithPrefix[3] = 0x5C;
 	FrameBufWithPrefix[4] = LD;
-	i2cSend(0x78, FrameBufWithPrefix, sizeof(FrameBufWithPrefix));
+	i2cSend(LCD_ADDR, FrameBufWithPrefix, sizeof(FrameBufWithPrefix));
 }
 
-#if 0
-void uc1701x_set_coordinates(const uint8_t Column,const uint8_t Page)
-{	Gpio_Set_Bit(GPIO_D4);
-uint32_t Timer;
-
-	Gpio_Clear_Bit(GPIO_DC);
-	Gpio_Clear_Bit(GPIO_NSS);
-	SPI_Send_One(CMD_SetColumn_l | (Column & 0xF));
-	SPI_Send_One(CMD_SetColumn_h | ((Column >> 4 ) & 0xF));
-	SPI_Send_One(CMD_SetPageAddr | (Page & 0xF));
-	Gpio_Set_Bit(GPIO_NSS);
-}
-
-void uc1701x_set_contrast(const uint8_t Contrast)
+void st75256_setCoordinates(const uint8_t Column,const uint8_t Page)
 {
-	Gpio_Clear_Bit(GPIO_DC);
-	Gpio_Clear_Bit(GPIO_NSS);
-	SPI_Send_One(CMD_SetElVolume);
-	SPI_Send_One(Contrast <=  63 ? Contrast : 0x10); /* Default if incorrect */
-	Gpio_Set_Bit(GPIO_NSS);
+	uint8_t conf[]=
+	{
+			C,0x30,
+			C,0x75,
+			D,Page / 8,
+			D,0x14,
+			C,0x15,
+			D,Column,
+			LD,0xFF
+	};
+	i2cSend(LCD_ADDR, conf,sizeof(conf));
 }
 
 
-void uc1701x_pixel(const uint8_t x, const uint8_t y, const uint8_t color)
+//void uc1701x_set_contrast(const uint8_t Contrast)
+//{
+//	Gpio_Clear_Bit(GPIO_DC);
+//	Gpio_Clear_Bit(GPIO_NSS);
+//	SPI_Send_One(CMD_SetElVolume);
+//	SPI_Send_One(Contrast <=  63 ? Contrast : 0x10); /* Default if incorrect */
+//	Gpio_Set_Bit(GPIO_NSS);
+//}
+
+
+void st75256_pixel(const uint8_t x, const uint8_t y, const uint8_t color)
 {
-	if ((x < XSIZE) && (y < YSIZE))
+	if ( /* (x < XSIZE) && */ (y < YSIZE))
 	{
 		const uint8_t yrow = y >> 3;
 		const uint8_t ymask = 1 << (y & 7);
-		const uint16_t addr = yrow * 132 + x + ZERO_OFFSET;
+		const uint16_t addr = yrow * 256 + x;
 		if (color == 0)
 		{
 			FrameBuf[addr] &= ~ymask;
@@ -140,7 +159,7 @@ void uc1701x_pixel(const uint8_t x, const uint8_t y, const uint8_t color)
 	}
 }
 
-uint8_t uc1701x_putchar(const uint8_t x,const uint8_t y,const FONT_INFO * const font,const uint16_t c)
+uint8_t st75256_putchar(const uint8_t x,const uint8_t y,const FONT_INFO * const font,const uint16_t c)
 {
 	uint8_t RetVal = x;
 	if ((c >= font->StartChar) && (c <= font->EndChar))
@@ -157,7 +176,7 @@ uint8_t uc1701x_putchar(const uint8_t x,const uint8_t y,const FONT_INFO * const 
 				{
 					const uint8_t * const Row = bitmap + yy * byteWidth;
 					const uint8_t Color = Row[xx >> 3] & ( 1 << ( 7 - (xx & 0x7)));
-					uc1701x_pixel(x + xx, y + yy, Color);
+					st75256_pixel(x + xx, y + yy, Color);
 				}
 			}
 			RetVal = x + bitWidth;
@@ -167,19 +186,19 @@ uint8_t uc1701x_putchar(const uint8_t x,const uint8_t y,const FONT_INFO * const 
 	return RetVal;
 }
 
-uint8_t uc1701x_puts(const uint8_t x, const uint8_t y, const FONT_INFO * const font, const wchar_t * const string)
+uint8_t st75256_puts(const uint8_t x, const uint8_t y, const FONT_INFO * const font, const wchar_t * const string)
 {
-	uint8_t x_curr = x;
+	uint16_t x_curr = x;
 	uint8_t pos = 0;
-	const uint8_t Height = uc1701x_get_font_height(font);
+	const uint8_t Height = st75256_get_font_height(font);
 	while ((x_curr < XSIZE) && (string[pos] != 0))
 	{
-		x_curr = uc1701x_putchar(x_curr,y,font,string[pos++]);
+		x_curr = st75256_putchar(x_curr,y,font,string[pos++]);
 		for (uint8_t xx = x_curr; xx < x_curr + DELIM_WIDTH; xx++ )
 		{
 			for (uint8_t yy = y; yy < y + Height; yy++ )
 			{
-				uc1701x_pixel(xx,yy,0);
+				st75256_pixel(xx,yy,0);
 			}
 		}
 		x_curr += DELIM_WIDTH;
@@ -187,12 +206,12 @@ uint8_t uc1701x_puts(const uint8_t x, const uint8_t y, const FONT_INFO * const f
 	return x_curr;
 }
 
-uint8_t uc1701x_get_font_height(const FONT_INFO * const Font)
+uint8_t st75256_get_font_height(const FONT_INFO * const Font)
 {
 	return Font->height;
 }
 
-uint8_t uc1701x_get_font_width(const FONT_INFO * const Font)
+uint8_t st75256_get_font_width(const FONT_INFO * const Font)
 {
 	uint8_t Width = 0;
 	for (uint16_t i = Font->StartChar; i <= Font->EndChar; i++)
@@ -202,5 +221,3 @@ uint8_t uc1701x_get_font_width(const FONT_INFO * const Font)
 	}
 	return Width + DELIM_WIDTH;
 }
-#endif
-#endif
