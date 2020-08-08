@@ -25,7 +25,7 @@ void Clock_HSI_Init(void)
 	{
 	}
 	RCC->CFGR &= ~RCC_CFGR_SW; /* USE HSI during setup */
-	RCC->CFGR |= /* for HSE: RCC_CFGR_PLLSRC | */ RCC_CFGR_ADCPRE_DIV8 | RCC_CFGR_PPRE1_2 | RCC_CFGR_PLLMULL8; /* Core freq is 32mhz */
+	RCC->CFGR |= /* for HSE: RCC_CFGR_PLLSRC | */ RCC_CFGR_ADCPRE_DIV8 | RCC_CFGR_PPRE1_2 | RCC_CFGR_PLLMULL10; /* Core freq is 40mhz */
 //	RCC->CR |= RCC_CR_HSEON;
 //	while ( ! (RCC->CR & RCC_CR_HSERDY) )
 //	{

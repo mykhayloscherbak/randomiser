@@ -26,8 +26,6 @@
 /* Bias = 1/14 */
 /* Duty = 1/160 */
 
-static uint8_t FrameBufWithPrefix[FRAME_BUF_SIZE + 5];
-static uint8_t * const FrameBuf = FrameBufWithPrefix + 5;
 
 enum
 {
@@ -37,98 +35,100 @@ enum
 	LD = 0x40
 };
 
-static const uint8_t Init_Array[]=
-{
-		 C, 0x30,// 0,    /* select 00 commands */
-		 C, 0x94,// 0,    /* sleep out */
-		 C, 0xae,// 0,    /* display off */
-		 C, 0x31,// 0,    /* select 01 commands */
+static const uint8_t prefix[] =
+	{
+			C,0x30,
+			C,0x15,
+			D,0,
+			D,0xFF,
+			C,0x75,
+			D,0x00,
+			D,0x28,
+			C,0x5c,
+			LD
+	};
 
-		 C, 0xd7,// 0,  /* disable auto read, 2 byte command */
-		 D, 0x9f,// 1,
 
-		 C, 0x32,// 0, /* analog circuit set, 4 bytes */
-		 D, 0x00,// 1,
-		 D, 0x01,// 1, /* Frequency on booster capacitors 1 = 6KHz? */
-		 D, 0x03,// 1, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
+static uint8_t FrameBufWithPrefix[FRAME_BUF_SIZE + sizeof(prefix)];
+static uint8_t * const FrameBuf = FrameBufWithPrefix + sizeof(prefix);
 
-		 C, 0x30,// 0,
-
-		 C, 0x75,// 0,
-		 D, 0x00,// 1,
-		 D, 0x28,// 1,
-		 C, 0x15,// 0,
-		 D, 0x00,// 1,
-		 D, 0xff,// 1,
-		 C, 0xbc,// 0, /* scan direction */
-		 D, 0x00,// 1,
-		 C, 0x0c,// 0,
-		 C, 0xca,// 0, /* Display control */
-		 D, 0x00,// 1,
-		 D, 0x9F,// 1,
-		 D, 0x20,// 1,
-		 C, 0xf0,// 0, /* no GS */
-		 D, 0x10,// 1,
-		 C, 0x81,// 0, /* Vop = 16V */
-		 D, 0x36,// 1,
-		 D, 0x04,// 1,
-		 C, 0x20,// 0,
-		 D, 0x0b, // 1
-		 C, 0x40, // 0
-		 C, 0xaf, // 0
-		 LC, 0xa6
-
-//
-//		{.cmd = 0xaf, .a0 = 0},
-//		{.cmd = 0x43, .a0 = 0}
-};
 
 uint8_t st75256_init(LCD_Desc_t * const lcdDesc)
 {
+	static const uint8_t Init_Array[]=
+	{
+			 C, 0x30,// 0,    /* select 00 commands */
+			 C, 0x94,// 0,    /* sleep out */
+			 C, 0xae,// 0,    /* display off */
+			 C, 0x31,// 0,    /* select 01 commands */
+
+			 C, 0xd7,// 0,  /* disable auto read, 2 byte command */
+			 D, 0x9f,// 1,
+
+			 C, 0x32,// 0, /* analog circuit set, 4 bytes */
+			 D, 0x00,// 1,
+			 D, 0x01,// 1, /* Frequency on booster capacitors 1 = 6KHz? */
+			 D, 0x03,// 1, /* Bias: 0: 1/14 1: 1/13, 2: 1/12, 3: 1/11, 4:1/10, 5:1/9 */
+
+			 C, 0x30,// 0,
+
+			 C, 0x75,// 0,
+			 D, 0x00,// 1,
+			 D, 0x13,// 1,
+			 C, 0x15,// 0,
+			 D, 0x00,// 1,
+			 D, 0xff,// 1,
+			 C, 0xbc,// 0, /* scan direction */
+			 D, 0x00,// 1,
+			 C, 0x0c,// 0,
+			 C, 0xca,// 0, /* Display control */
+			 D, 0x00,// 1,
+			 D, 0x9F,// 1,
+			 D, 0x20,// 1,
+			 C, 0xf0,// 0, /* no GS */
+			 D, 0x10,// 1,
+			 C, 0x81,// 0, /* Vop = 16V */
+			 D, 0x36,// 1,
+			 D, 0x04,// 1,
+			 C, 0x20,// 0,
+			 D, 0x0b, // 1
+			 C, 0x40, // 0
+			 C, 0xaf, // 0
+			 LC, 0xa6
+
+	};
+
 	Gpio_Clear_Bit(GPIO_RESET);
 	DelayMsTimer(10);
 	Gpio_Set_Bit(GPIO_RESET);
 	DelayMsTimer(10);
 	lcdDesc->xsize = XSIZE;
 	lcdDesc->ysize = YSIZE;
-	return i2cSend(LCD_ADDR, (uint8_t *) Init_Array, sizeof(Init_Array));
-
+	const uint8_t retval = i2cSend(LCD_ADDR, (uint8_t *) Init_Array, sizeof(Init_Array));
+	if (retval != 0)
+	{
+		waitTransfer();
+	}
+	DelayMsTimer(2);
+	return retval;
 }
 
 
 
 void st75256_test(void)	//		MainLoop_Iteration();
 {
+	waitTransfer();
 	memset(FrameBuf, 0x00, FRAME_BUF_SIZE);
-	st75256_puts(60,40,&arial_72ptFontInfo,L"123");
-//	st75256_setCoordinates(0,0);
+	st75256_puts(60,40,&arial_72ptFontInfo,L"1231");
 	st75256_sendBuffer();
 }
 
 void st75256_sendBuffer(void)
 {
-	FrameBufWithPrefix[0] = C;
-	FrameBufWithPrefix[1] = 0x30;
-	FrameBufWithPrefix[2] = C;
-	FrameBufWithPrefix[3] = 0x5C;
-	FrameBufWithPrefix[4] = LD;
+	memcpy(FrameBufWithPrefix,prefix,sizeof(prefix));
 	i2cSend(LCD_ADDR, FrameBufWithPrefix, sizeof(FrameBufWithPrefix));
 }
 
-void st75256_setCoordinates(const uint8_t Column,const uint8_t Page)
-{
-	uint8_t conf[]=
-	{
-			C,0x30,
-			C,0x75,
-			D,Page / 8,
-			D,0x14,
-			C,0x15,
-			D,Column,
-			LD,0xFF
-	};
-	i2cSend(LCD_ADDR, conf,sizeof(conf));
-}
 
 
 //void uc1701x_set_contrast(const uint8_t Contrast)

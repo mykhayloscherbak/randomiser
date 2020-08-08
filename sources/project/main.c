@@ -24,7 +24,6 @@ static void Init(void)
   i2cInit();
   LCD_Desc_t desc;
   st75256_init(&desc);
-  DelayMsTimer(10);
   //  SPI_Init();
 //  Buttons_Init();
 //  uc1701x_init();
@@ -34,12 +33,11 @@ static void Init(void)
 
 void main(void)
 {
-	Init();
-	st75256_test();
+ 	Init();
 	while ( 1 )
 	{
-	//	st75256_test();
-		__asm volatile ("nop");
+		st75256_test();
+//		__asm volatile ("nop");
 	}
 }
 
