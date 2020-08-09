@@ -13,7 +13,7 @@
 #include "Gpio.h"
 #include "Clock.h"
 #include "i2c.h"
-#include "../fonts/arial72.h"
+#include "../fonts/arial144.h"
 
 
 #define XSIZE 256
@@ -119,7 +119,7 @@ void st75256_test(void)	//		MainLoop_Iteration();
 {
 	waitTransfer();
 	memset(FrameBuf, 0x00, FRAME_BUF_SIZE);
-	st75256_puts(60,40,&arial_72ptFontInfo,L"1231");
+	st75256_puts(10,8,&arial_144ptFontInfo,L"123");
 	st75256_sendBuffer();
 }
 
