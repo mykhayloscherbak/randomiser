@@ -21,7 +21,7 @@ static void Init(void)
   Clock_HSI_Init();
   Gpio_Init();
   Clock_Timebase_Init();
-  i2cInit();
+  SPI_Init();
   LCD_Desc_t desc;
   st75256_init(&desc);
   //  SPI_Init();
@@ -37,7 +37,7 @@ void main(void)
 	while ( 1 )
 	{
 		st75256_test();
-//		__asm volatile ("nop");
+		__asm volatile ("nop");
 	}
 }
 

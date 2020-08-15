@@ -13,6 +13,8 @@
 #include "Gpio.h"
 #include "Clock.h"
 #include "i2c.h"
+#include <wchar.h>
+#include <stdio.h>
 #include "../fonts/arial144.h"
 
 
@@ -20,7 +22,7 @@
 #define YSIZE 160
 #define FRAME_BUF_SIZE (XSIZE * YSIZE / 8)
 #define DELIM_WIDTH 2
-#define LCD_ADDR 0x78
+
 
 /* Vop = 16V */
 /* Bias = 1/14 */
@@ -29,10 +31,8 @@
 
 enum
 {
-	C = 0x80,
-	D = 0xC0,
-	LC = 0x00,
-	LD = 0x40
+	C = 0x0,
+	D = 0x1
 };
 
 static const uint8_t prefix[] =
@@ -44,16 +44,14 @@ static const uint8_t prefix[] =
 			C,0x75,
 			D,0x00,
 			D,0x28,
-			C,0x5c,
-			LD
+			C,0x5c
 	};
 
 
-static uint8_t FrameBufWithPrefix[FRAME_BUF_SIZE + sizeof(prefix)];
-static uint8_t * const FrameBuf = FrameBufWithPrefix + sizeof(prefix);
+static uint8_t FrameBuf[FRAME_BUF_SIZE];
 
 
-uint8_t st75256_init(LCD_Desc_t * const lcdDesc)
+void st75256_init(LCD_Desc_t * const lcdDesc)
 {
 	static const uint8_t Init_Array[]=
 	{
@@ -94,7 +92,7 @@ uint8_t st75256_init(LCD_Desc_t * const lcdDesc)
 			 D, 0x0b, // 1
 			 C, 0x40, // 0
 			 C, 0xaf, // 0
-			 LC, 0xa6
+			 C, 0xa6
 
 	};
 
@@ -104,29 +102,52 @@ uint8_t st75256_init(LCD_Desc_t * const lcdDesc)
 	DelayMsTimer(10);
 	lcdDesc->xsize = XSIZE;
 	lcdDesc->ysize = YSIZE;
-	const uint8_t retval = i2cSend(LCD_ADDR, (uint8_t *) Init_Array, sizeof(Init_Array));
-	if (retval != 0)
+	Gpio_Clear_Bit(GPIO_NSS);
+	for (uint16_t i = 0; i < sizeof(Init_Array) / 2; i++)
 	{
-		waitTransfer();
+		if (Init_Array[i * 2] == C)
+		{
+			Gpio_Clear_Bit(GPIO_DC);
+		}
+		else
+		{
+			Gpio_Set_Bit(GPIO_DC);
+		}
+		SPI_Send_One(Init_Array[i * 2 + 1]);
 	}
-	DelayMsTimer(2);
-	return retval;
+	Gpio_Set_Bit(GPIO_NSS);
 }
 
 
 
 void st75256_test(void)	//		MainLoop_Iteration();
 {
-	waitTransfer();
+	WaitTransfer();
+	static uint8_t phase = 0;
 	memset(FrameBuf, 0x00, FRAME_BUF_SIZE);
-	st75256_puts(10,8,&arial_144ptFontInfo,L"123");
+	wchar_t buf[20];
+	swprintf(buf,20, L"%3u",phase++);
+	st75256_puts(10,8,&arial_144ptFontInfo,buf);
 	st75256_sendBuffer();
 }
 
 void st75256_sendBuffer(void)
 {
-	memcpy(FrameBufWithPrefix,prefix,sizeof(prefix));
-	i2cSend(LCD_ADDR, FrameBufWithPrefix, sizeof(FrameBufWithPrefix));
+
+	Gpio_Clear_Bit(GPIO_NSS);
+	for (uint16_t i = 0; i < sizeof(prefix) / 2; i++)
+	{
+		if (prefix[i * 2] == C)
+		{
+			Gpio_Clear_Bit(GPIO_DC);
+		}
+		else
+		{
+			Gpio_Set_Bit(GPIO_DC);
+		}
+		SPI_Send_One(prefix[i * 2 + 1]);
+	}
+	SPI_Transfer(FrameBuf,sizeof(FrameBuf));
 }
 
 

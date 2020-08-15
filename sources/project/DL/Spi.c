@@ -6,7 +6,7 @@
  * @date 26-04-2017
  *
  */
-#include "uc1701x.h"
+
 #include "Spi.h"
 #include "Gpio.h"
 #include <stm32f1xx.h>
@@ -29,7 +29,7 @@ void SPI_Init(void)
 	GPIOB->CRH |=  GPIO_CRH_CNF13_1 | GPIO_CRH_CNF15_1 | GPIO_CRH_MODE13 | GPIO_CRH_MODE15;
 	GPIOB->CRH &= ~(GPIO_CRH_CNF13_0 | GPIO_CRH_CNF15_0);
 	/* Prescaler = 8, Bidi out, 8bit, SW nss control, idle low, 1 edge, master */
-	SPI2->CR1 = SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE | /* SPI_CR1_DFF | */ SPI_CR1_BR_1 | /* SPI_CR1_BR_0 | */ SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI;
+	SPI2->CR1 = SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE | /* SPI_CR1_DFF | */ SPI_CR1_BR_0 | /* SPI_CR1_BR_1 | */ SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI;
 	SPI2->CR2 = 0; // SPI_CR2_SSOE;
 	SPI2->CR1 |= SPI_CR1_SPE ;
 	DMA_Spi_Init();
@@ -65,24 +65,24 @@ void SPI2_IRQHandler(void)
 
 	}
 	Gpio_Set_Bit(GPIO_NSS);
-	TransferComplete = 1;
+	TransferComplete = 0xff;
 	SPI2->CR2 &= ~(SPI_CR2_TXEIE);
 
 }
 
-
-void SPI_Transfer(uint8_t wait)
+void WaitTransfer(void)
 {
-	if (wait != 0)
+	while (TransferComplete == 0)
 	{
-		while (TransferComplete == 0)
-		{
-		}
 	}
+}
+
+void SPI_Transfer(uint8_t * const FrameBuf, uint16_t const size)
+{
 	Gpio_Set_Bit(GPIO_DC);
 	Gpio_Clear_Bit(GPIO_NSS);
 	TransferComplete = 0;
-	DMA1_Channel5->CNDTR = FRAME_BUF_SIZE;
+	DMA1_Channel5->CNDTR = size;
 	DMA1_Channel5->CPAR = (uint32_t)(&SPI2->DR);
 	DMA1_Channel5->CMAR = (uint32_t)&FrameBuf[0];
 	SPI2->CR2 |= SPI_CR2_TXDMAEN;

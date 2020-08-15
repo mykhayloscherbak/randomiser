@@ -16,13 +16,13 @@
 typedef enum
 {
 	GPIO_HEARTBEAT = 0,/**< HEARTBEAT led */
-//	GPIO_NSS,		   /**< SPI not slave select */
+	GPIO_NSS,		   /**< SPI not slave select */
 //	GPIO_BUTTON,       /**< Button in */
 	GPIO_RESET,		   /**< Reset for LCD */
-//	GPIO_DC,		   /**< D/Command */
+	GPIO_DC,		   /**< D/Command */
 //	GPIO_BEEPER,       /**< Shit beeper */
-	GPIO_SCL,          /**< LCD SCL */
-	GPIO_SDA,         /**< LCD SDA */
+	GPIO_SCK,          /**< LCD SCK */
+	GPIO_MOSI,         /**< LCD Mosi */
 	GPIO_TOTAL         /**< Total number of GPIOs */
 }Gpio_Desc_t;
 

@@ -11,7 +11,7 @@ typedef struct
 	uint16_t ysize;
 } LCD_Desc_t;
 
-uint8_t st75256_init(LCD_Desc_t * const lcdDesc);
+void st75256_init(LCD_Desc_t * const lcdDesc);
 void st75256_test(void);
 void st75256_sendBuffer(void);
 void st75256_setCoordinates(const uint8_t Column,const uint8_t Page);
