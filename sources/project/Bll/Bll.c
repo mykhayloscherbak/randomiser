@@ -21,7 +21,7 @@
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
 
-#define VERSION L"V1.01"
+#define VERSION L"V1.10"
 #define WIDE2(x) L##x
 #define WIDE(x) WIDE2(x)
 
@@ -101,18 +101,22 @@ static void Sleep(void)
 	uc1701x_set_contrast(contrast);
 }
 
-static void versionDisplay(void)
+static void versionAndModeDisplay(const uint8_t mode)
 {
 	uc1701x_cls();
 	const wchar_t Line1[] = VERSION;
 	const wchar_t Line2[] = WIDE(__DATE__);
 	const wchar_t Line3[] = WIDE(__TIME__);
+	const wchar_t Line4[] = L"Режим";
 	const FONT_INFO * const pFont = &arial_8ptFontInfo;
 	const uint8_t height = uc1701x_get_font_height(pFont);
 	uc1701x_puts(0,0,pFont,Line1);
 	uc1701x_puts(0,height,pFont,Line2);
 	uc1701x_puts(0,height * 2,pFont,Line3);
+	uc1701x_puts(0,height * 3,pFont,Line4);
+	uc1701x_putchar(35,height * 3,pFont,mode + '0');
 }
+
 
 static uint32_t calcRandom(const uint32_t seed)
 {
@@ -132,6 +136,7 @@ static void Bl_process(void)
 	static uint8_t beepCounter;
 	static uint32_t beepTimer;
 	static uint8_t randomInited = 0;
+	static uint8_t mode = 3;
 	uint8_t random;
 
 	switch (state)
@@ -139,7 +144,11 @@ static void Bl_process(void)
 	case ST_First_time:
 		uc1701x_setMirror(UC1701X_MIRROR_none);
 		uc1701x_set_contrast(contrast);
-		versionDisplay();
+		if (IsPressed(B_GEN) != 0)
+		{
+			mode = 2;
+		}
+		versionAndModeDisplay(mode);
 		SetTimer(&Timer,100);
 		state = ST_Version;
 		break;
@@ -169,7 +178,7 @@ static void Bl_process(void)
 		}
 		break;
 	case ST_Wait_Button_p:
-		random = (calcRandom(0) >> 5) % 3 + 1;
+		random = (calcRandom(0) >> 5) % mode + 1;
 		if (IsSteadyPressed(B_GEN) != 0)
 		{
 			if (randomInited == 0)
