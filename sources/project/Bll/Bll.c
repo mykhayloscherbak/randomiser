@@ -21,15 +21,16 @@
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
 
-#define VERSION L"V1.10"
+#define VERSION L"V1.20"
 #define WIDE2(x) L##x
 #define WIDE(x) WIDE2(x)
 
 typedef enum
 {
-	contrast = 42,
+	contrast = 32,
 	freezeTimeout = 5,
-	sleepTimeout = 10 * 60
+	sleepTimeout = 10 * 60,
+	maxSeqLen = 2
 } Constants;
 /**
  * @brief Task table element
@@ -185,6 +186,30 @@ static void Bl_process(void)
 			{
 				calcRandom(GetTicksCounter());
 				randomInited = 1;
+			}
+			if (3 == mode)
+			{
+				static uint8_t previousRandom = 0;
+				static uint8_t seqLen = 0;
+				if (previousRandom == random)
+				{
+					seqLen++;
+				}
+				else
+				{
+					previousRandom = random;
+					seqLen = 0;
+				}
+				if (seqLen >= maxSeqLen)
+				{
+					while (random == previousRandom)
+					{
+						random = (calcRandom(0) >> 5) % mode + 1;
+					}
+					previousRandom = random;
+					seqLen = 0;
+				}
+
 			}
 			uc1701x_cls();
 			beepCounter = (random - 1) * 2;
