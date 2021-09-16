@@ -195,3 +195,14 @@ void uc1701x_cls(void)
 {
 	memset(FrameBuf,0,FRAME_BUF_SIZE);
 }
+
+void uc1701x_filled_rect(const uint8_t x1, const uint8_t y1, const uint8_t x2, const uint8_t y2)
+{
+	for (uint8_t line = y1; line < y2; line++)
+	{
+		for (uint8_t pixel = x1; pixel < x2; pixel++)
+		{
+			uc1701x_pixel(pixel, line, 1);
+		}
+	}
+}

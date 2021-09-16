@@ -27,10 +27,12 @@
 
 typedef enum
 {
-	contrast = 32,
+	contrast = 36,
 	freezeTimeout = 5,
 	sleepTimeout = 10 * 60,
-	maxSeqLen = 2
+	maxSeqLen = 2,
+	barY1 = 128 - 15,
+	barY2 = 127
 } Constants;
 /**
  * @brief Task table element
@@ -126,6 +128,15 @@ static uint32_t calcRandom(const uint32_t seed)
 	return result;
 }
 
+static void drawBars(const uint8_t mode)
+{
+	const uint8_t barLen = 64 / (mode * 2 - 1);
+	for (uint8_t bar = 0; bar < mode; bar++)
+	{
+		uc1701x_filled_rect(bar * 2 * barLen, barY1, (bar * 2  + 1) * barLen,barY2);
+	}
+}
+
 static void Bl_process(void)
 {
 
@@ -219,6 +230,7 @@ static void Bl_process(void)
 			uc1701x_cls();
 			const uint8_t x = (64 - uc1701x_get_symbol_width(&arial_72ptFontInfo,Buf[0])) / 2;
 			uc1701x_puts(x,y,&arial_72ptFontInfo, Buf);
+			drawBars(mode);
 			SetTimer(&Timer,freezeTimeout * 100);
 			SetTimer(&beepTimer,10);
 			beeperOn();
