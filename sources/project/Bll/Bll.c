@@ -130,10 +130,10 @@ static uint32_t calcRandom(const uint32_t seed)
 
 static void drawBars(const uint8_t mode)
 {
-	const uint8_t barLen = 64 / (mode * 2 - 1);
-	for (uint8_t bar = 0; bar < mode; bar++)
+	const uint8_t barPos = 64 / (mode  + 1);
+	for (uint8_t bar = 1; bar <= mode; bar++)
 	{
-		uc1701x_filled_rect(bar * 2 * barLen, barY1, (bar * 2  + 1) * barLen,barY2);
+		uc1701x_filled_rect(bar * barPos, barY1, bar * barPos + 1, barY2);
 	}
 }
 
