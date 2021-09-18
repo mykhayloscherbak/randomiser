@@ -1,10 +1,10 @@
 /**
  * @file Gpio.c
  * @brief Contains init and access functions for Gpio
- * @author Mikl Scherbak
+ * @author Mykhaylo Shcherbak
  * @em mikl74@yahoo.com
- * @date 18-07-2020
- * @version 1.1
+ * @date 20-09-2021
+ * @version 1.2
  */
 
 #include "stm32f1xx.h"
@@ -39,6 +39,7 @@ static void nssPD(void);
 static void lcdResetPD(void);
 static void beeperPD(void);
 static void dcPD(void);
+static void blPD(void);
 
 static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 {
@@ -49,7 +50,8 @@ static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 		[GPIO_BEEPER] = {.Port = GPIOB, .Pin = 11, .Mode = GPIO_MODE_OUT,0,beeperPD}, //GPIO_BEEPER
 		[GPIO_SCK] = {.Port = GPIOB, .Pin = 13, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0,  NULL},
 		[GPIO_MOSI] = {.Port = GPIOB, .Pin = 15, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, NULL},
-		[GPIO_DC]    = {.Port = GPIOB,.Pin = 14,  .Mode = GPIO_MODE_OUT, 0,dcPD}  //GPIO_DC
+		[GPIO_DC]    = {.Port = GPIOB,.Pin = 14,  .Mode = GPIO_MODE_OUT, 0,dcPD},  //GPIO_DC
+		[GPIO_BL]    = {.Port = GPIOA, .Pin = 8, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, blPD}
 };
 
 
@@ -232,6 +234,20 @@ static void configPinIn(const Gpio_Desc_t pin, const uint8_t pullUp)
 	}
 }
 
+
+void Gpio_Get_Alt_PortPin(const Gpio_Desc_t Gpio,GPIO_TypeDef ** const Port,uint8_t * const Pin)
+{
+	if (Gpio < GPIO_TOTAL)
+	{
+		if (NULL != Port && NULL != Pin)
+		{
+			*Port = Gpio_Config[Gpio].Port;
+			*Pin = Gpio_Config[Gpio].Pin;
+		}
+	}
+}
+
+
 static void heartBeatPD(void)
 {
 	configPinIn(GPIO_HEARTBEAT,1);
@@ -255,4 +271,9 @@ static void beeperPD(void)
 static void dcPD(void)
 {
 	configPinIn(GPIO_DC,1);
+}
+
+static void blPD(void)
+{
+	configPinIn(GPIO_BL,1);
 }

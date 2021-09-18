@@ -10,6 +10,8 @@
 #ifndef SOURCE_DL_GPIO_H_
 #define SOURCE_DL_GPIO_H_
 
+#include "stm32f1xx.h"
+
 /**
  * @brief Descriptions of GPIO pins
  */
@@ -23,6 +25,7 @@ typedef enum
 	GPIO_BEEPER,       /**< Shit beeper */
 	GPIO_SCK,          /**< LCD SCK */
 	GPIO_MOSI,         /**< LCD Mosi */
+	GPIO_BL,           /**< LCD backlight */
 	GPIO_TOTAL         /**< Total number of GPIOs */
 }Gpio_Desc_t;
 
@@ -40,4 +43,5 @@ void Gpio_Set_Bit(Gpio_Desc_t Gpio);
  */
 void Gpio_Clear_Bit(Gpio_Desc_t Gpio);
 uint8_t Gpio_Read_Bit ( Gpio_Desc_t Gpio);
+void Gpio_Get_Alt_PortPin(const Gpio_Desc_t Gpio,GPIO_TypeDef ** const Port,uint8_t * const Pin);
 #endif /* SOURCE_DL_GPIO_H_ */
