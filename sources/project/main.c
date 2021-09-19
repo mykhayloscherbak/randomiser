@@ -11,6 +11,7 @@
 #include "Bll/BLL.h"
 #include "DL/Spi.h"
 #include "DL/buttons.h"
+#include "DL/pwm.h"
 
 
 static void Init(void)
@@ -18,6 +19,7 @@ static void Init(void)
   Clock_HSI_Init();
   Gpio_Init();
   Clock_Timebase_Init();
+  PWM_Init();
   SPI_Init();
   Buttons_Init();
   uc1701x_init();

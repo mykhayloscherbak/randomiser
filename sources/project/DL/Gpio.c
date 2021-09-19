@@ -39,7 +39,7 @@ static void nssPD(void);
 static void lcdResetPD(void);
 static void beeperPD(void);
 static void dcPD(void);
-static void blPD(void);
+
 
 static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 {
@@ -51,7 +51,7 @@ static const Gpio_Config_t Gpio_Config[GPIO_TOTAL]=
 		[GPIO_SCK] = {.Port = GPIOB, .Pin = 13, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0,  NULL},
 		[GPIO_MOSI] = {.Port = GPIOB, .Pin = 15, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, NULL},
 		[GPIO_DC]    = {.Port = GPIOB,.Pin = 14,  .Mode = GPIO_MODE_OUT, 0,dcPD},  //GPIO_DC
-		[GPIO_BL]    = {.Port = GPIOA, .Pin = 8, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, blPD}
+		[GPIO_BL]    = {.Port = GPIOA, .Pin = 8, .Mode = GPIO_MODE_DO_NOT_TOUCH, 0, NULL} // GPIO_BL
 };
 
 
@@ -271,9 +271,4 @@ static void beeperPD(void)
 static void dcPD(void)
 {
 	configPinIn(GPIO_DC,1);
-}
-
-static void blPD(void)
-{
-	configPinIn(GPIO_BL,1);
 }

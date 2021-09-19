@@ -17,6 +17,7 @@
 #include "../DL/buttons.h"
 #include "../DL/Spi.h"
 #include "../DL/uc1701x.h"
+#include "../DL/pwm.h"
 #include "../DL/power.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
@@ -53,6 +54,17 @@ static inline void beeperOff(void)
 {
 	Gpio_Clear_Bit(GPIO_BEEPER);
 }
+
+static void backLight_on(void)
+{
+	Set_PWM(100);
+}
+
+static void backLight_off(void)
+{
+	Set_PWM(0);
+}
+
 
 static void Heartbeat (void)
 {
@@ -145,6 +157,7 @@ static void Bl_process(void)
 	const wchar_t Line2[] = L"кнопку";
 	const uint8_t y = 30;
 	static uint32_t Timer = 0;
+	static uint32_t blTimer = 0;
 	static uint8_t beepCounter;
 	static uint32_t beepTimer;
 	static uint8_t randomInited = 0;
@@ -160,6 +173,7 @@ static void Bl_process(void)
 		{
 			mode = 2;
 		}
+		backLight_on();
 		versionAndModeDisplay(mode);
 		SetTimer(&Timer,100);
 		state = ST_Version;
@@ -174,7 +188,9 @@ static void Bl_process(void)
 		if (IsSteadyReleased(B_GEN) != 0)
 		{
 			beeperOn();
+			backLight_on();
 			SetTimer(&Timer,50);
+			SetTimer(&blTimer,300); /* 3s for backlight */
 			state = ST_Greeting;
 		}
 		break;
@@ -191,8 +207,14 @@ static void Bl_process(void)
 		break;
 	case ST_Wait_Button_p:
 		random = (calcRandom(0) >> 5) % mode + 1;
+		if (IsTimerPassed(blTimer) != 0)
+		{
+			backLight_off();
+			SetTimer(&blTimer,0xFFFFFFFF);
+		}
 		if (IsSteadyPressed(B_GEN) != 0)
 		{
+			backLight_on();
 			if (randomInited == 0)
 			{
 				calcRandom(GetTicksCounter());

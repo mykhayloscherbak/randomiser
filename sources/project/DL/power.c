@@ -3,11 +3,13 @@
 #include "Spi.h"
 #include "Clock.h"
 #include "power.h"
+#include "pwm.h"
 
 static void sleep(void)
 {
 	Clock_Timebase_deinit();
 	SPI_Deinit();
+	PWM_Deinit();
 	Gpio_DeInit();
 	EXTI->FTSR |= EXTI_FTSR_FT1;
 	EXTI->EMR |= EXTI_EMR_EM1;
@@ -26,6 +28,7 @@ static void wakeup(void)
 	Clock_Timebase_Init();
 	Gpio_Init();
 	SPI_Init();
+	PWM_Init();
 }
 
 void powerSave(void)
