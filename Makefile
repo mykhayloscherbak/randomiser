@@ -48,6 +48,7 @@ OBJCOPY := arm-none-eabi-objcopy
 SIZE    := arm-none-eabi-size
 MKDIR   := mkdir
 RM      := rm
+TESTER  := ceedling
 
 PROJ_ROOT := ${CURDIR}
 MY_TOOLS_DIR := $(PROJ_ROOT)/tools
@@ -204,10 +205,14 @@ $(DEPSASM): Makefile
 all_with_deps: build_all
 
 .PHONY : build_all
-build_all: create_binary create_listing 
+build_all: create_binary create_listing unit_tests
 
 .PHONY : create_binary
 create_binary: $(OUTPUT_EXE_DIR)/$(OUTPUT_BIN) $(OUTPUT_EXE_DIR)/$(OUTPUT_HEX)
+
+.PHONY : unit_tests
+unit_tests:	Makefile
+	@cd tests ;$(TESTER)
 
 $(OUTPUT_EXE_DIR)/$(OUTPUT_BIN): $(OUTPUT_EXE_DIR)/$(OUTPUT_ELF)
 	$(OBJCOPY) -O binary $< $@

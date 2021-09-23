@@ -1,2 +1,4 @@
 output/*
 output
+tests/build/*
+tests/build
