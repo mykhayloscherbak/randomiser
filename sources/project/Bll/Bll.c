@@ -12,12 +12,12 @@
 #include <stdint.h>
 #include <wchar.h>
 #include "BLL.h"
+#include "backlight.h"
 #include "../DL/Gpio.h"
 #include "../DL/Clock.h"
 #include "../DL/buttons.h"
 #include "../DL/Spi.h"
 #include "../DL/uc1701x.h"
-#include "../DL/pwm.h"
 #include "../DL/power.h"
 #include "../fonts/arial72.h"
 #include "../fonts/arial8.h"
@@ -35,6 +35,7 @@ typedef enum
 	barY1 = 128 - 15,
 	barY2 = 127
 } Constants;
+
 /**
  * @brief Task table element
  */
@@ -54,17 +55,6 @@ static inline void beeperOff(void)
 {
 	Gpio_Clear_Bit(GPIO_BEEPER);
 }
-
-static void backLight_on(void)
-{
-	Set_PWM(100);
-}
-
-static void backLight_off(void)
-{
-	Set_PWM(0);
-}
-
 
 static void Heartbeat (void)
 {
@@ -111,6 +101,7 @@ static void Sleep(void)
 {
 	Gpio_Clear_Bit(GPIO_RESET);
 	powerSave();
+	backlight_init();
 	uc1701x_init();
 	uc1701x_setMirror(UC1701X_MIRROR_none);
 	uc1701x_set_contrast(contrast);
@@ -324,6 +315,7 @@ uint8_t MainLoop_Iteration(void)
 {
 	static const Task_table_t TaskTable[]={
 			{1,0, BLL_Process_Buttons},
+			{1,0, processBacklight},
 			{10,1,Heartbeat},
 			{10,2,BLL_iteration_and_display},
 			{0,0,NULL}
