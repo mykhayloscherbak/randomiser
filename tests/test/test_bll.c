@@ -10,6 +10,7 @@
 #include "mock_uc1701x.h"
 #include "mock_buttons.h"
 #include "mock_Spi.h"
+#include "backlight.h"
 
 
 void test_bll_call(void)

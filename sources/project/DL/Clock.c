@@ -8,7 +8,7 @@
 #include "stm32f1xx.h"
 #include "Clock.h"
 #include "Gpio.h"
-#include "../Bll/BLL.h"
+#include "../Bll/Bll.h"
 
 static volatile uint32_t TicksCounter = 0;
 

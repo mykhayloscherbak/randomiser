@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <wchar.h>
-#include "BLL.h"
+#include "Bll.h"
 #include "backlight.h"
 #include "../DL/Gpio.h"
 #include "../DL/Clock.h"
